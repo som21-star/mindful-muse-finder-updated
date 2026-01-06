@@ -1,0 +1,6 @@
+{
+  "appId": "com.example.mindfulmuse",
+  "appName": "Mindful Muse Finder",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
