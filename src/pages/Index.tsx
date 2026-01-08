@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Book, Film, Music, Sparkles, ArrowRight, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -10,19 +11,24 @@ import { Pagination } from "@/components/Pagination";
 import { useRecommendations } from "@/hooks/useRecommendations";
 import heroImage from "@/assets/hero-discover.jpg";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/Auth";
+import { supabase } from "@/integrations/supabase/client";
 
 type AppState = "welcome" | "category" | "wizard" | "recommendations";
 type Category = "books" | "movies" | "music";
 
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user, loading, signOut } = useAuth();
+
   const [appState, setAppState] = useState<AppState>("welcome");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  
-  const { 
-    recommendations, 
+
+  const {
+    recommendations,
     isLoading,
     currentPage,
     totalPages,
@@ -33,6 +39,51 @@ const Index = () => {
     goToPage,
   } = useRecommendations();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Failed to load user profile", error);
+        return;
+      }
+
+      if (data) {
+        // Helper to convert array to first value or empty string for legacy compatibility
+        const firstOrEmpty = (arr: any) => Array.isArray(arr) && arr.length > 0 ? arr[0] : (arr || "");
+
+        const profile: UserProfile = {
+          age: data.age ?? "",
+          gender: data.gender ?? "",
+          city: data.city ?? "",
+          region: data.region ?? "",
+          country: data.country ?? "",
+          activity: firstOrEmpty(data.activity),
+          mood: firstOrEmpty(data.mood),
+          bookGenre: firstOrEmpty(data.book_genre),
+          musicType: firstOrEmpty(data.music_type),
+          movieStyle: firstOrEmpty(data.movie_style),
+          personalityTraits: Array.isArray(data.personality_traits) ? data.personality_traits : [],
+          alignments: Array.isArray(data.alignments) ? data.alignments : [],
+        };
+        setUserProfile(profile);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
   const handleCategorySelect = (category: Category) => {
     setSelectedCategory(category);
     setAppState("wizard");
@@ -41,7 +92,28 @@ const Index = () => {
   const handleWizardComplete = async (profile: UserProfile) => {
     setUserProfile(profile);
     setAppState("recommendations");
-    
+
+    if (user) {
+      await supabase.from("user_profiles").upsert(
+        {
+          user_id: user.id,
+          age: profile.age || null,
+          gender: profile.gender || null,
+          city: profile.city || null,
+          region: profile.region || null,
+          country: profile.country || null,
+          activity: profile.activity ? [profile.activity] : null,
+          mood: profile.mood ? [profile.mood] : null,
+          book_genre: profile.bookGenre ? [profile.bookGenre] : null,
+          music_type: profile.musicType ? [profile.musicType] : null,
+          movie_style: profile.movieStyle ? [profile.movieStyle] : null,
+          personality_traits: profile.personalityTraits ?? null,
+          alignments: profile.alignments ?? null,
+        },
+        { onConflict: "user_id" }
+      );
+    }
+
     if (selectedCategory) {
       await generateRecommendations(profile, selectedCategory);
     }
@@ -78,6 +150,14 @@ const Index = () => {
     }
   };
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background transition-all duration-500">
       {/* Header */}
@@ -89,7 +169,25 @@ const Index = () => {
             </div>
             <span className="font-serif font-semibold text-lg text-foreground">Conscious</span>
           </div>
-          
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/profile")}
+            >
+              Profile
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await signOut();
+                navigate("/auth");
+              }}
+            >
+              Sign out
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -227,10 +325,10 @@ const Index = () => {
 
             {/* Search Bar for all categories */}
             <div className="mb-6">
-              <ContentSearch 
-                category={selectedCategory} 
-                onSearch={handleSearch} 
-                isLoading={isLoading} 
+              <ContentSearch
+                category={selectedCategory}
+                onSearch={handleSearch}
+                isLoading={isLoading}
               />
             </div>
 

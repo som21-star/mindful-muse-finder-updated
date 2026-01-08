@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelectDropdown } from "@/components/ui/multi-select-dropdown";
 import { cn } from "@/lib/utils";
 
 export interface UserProfile {
@@ -18,11 +19,13 @@ export interface UserProfile {
   city: string;
   region: string;
   country: string;
-  activity: string;
-  mood: string;
-  bookGenre: string;
-  musicType: string;
-  movieStyle: string;
+  activity: string[];
+  mood: string[];
+  bookGenre: string[];
+  musicType: string[];
+  movieStyle: string[];
+  personalityTraits: string[];
+  alignments: string[];
 }
 
 interface ProfileWizardProps {
@@ -117,6 +120,30 @@ const movieStyles = [
   { value: "historical", label: "Historical & Period" },
 ];
 
+const personalityTraits = [
+  { value: "introvert", label: "Introverted" },
+  { value: "extrovert", label: "Extroverted" },
+  { value: "ambivert", label: "Ambivert" },
+  { value: "intuitive", label: "Intuitive" },
+  { value: "observant", label: "Observant" },
+  { value: "thinking", label: "Thinking" },
+  { value: "feeling", label: "Feeling" },
+  { value: "judging", label: "Judging" },
+  { value: "prospecting", label: "Prospecting" },
+  { value: "assertive", label: "Assertive" },
+  { value: "turbulent", label: "Turbulent" },
+];
+
+const alignments = [
+  { value: "chaotic-good", label: "Chaotic Good" },
+  { value: "lawful-neutral", label: "Lawful Neutral" },
+  { value: "true-neutral", label: "True Neutral" },
+  { value: "minimalist", label: "Minimalist" },
+  { value: "maximalist", label: "Maximalist" },
+  { value: "traditionalist", label: "Traditionalist" },
+  { value: "progressive", label: "Progressive" },
+];
+
 const countries = [
   { value: "india", label: "India" },
   { value: "usa", label: "United States" },
@@ -144,18 +171,22 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
     city: "",
     region: "",
     country: "",
-    activity: "",
-    mood: "",
-    bookGenre: "",
-    musicType: "",
-    movieStyle: "",
+    activity: [],
+    mood: [],
+    bookGenre: [],
+    musicType: [],
+    movieStyle: [],
+    personalityTraits: [],
+    alignments: [],
   });
 
-  const totalSteps = 3;
+  const totalSteps = 4;
 
-  const updateProfile = (field: keyof UserProfile, value: string) => {
+  const updateProfile = (field: keyof UserProfile, value: any) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
   };
+
+  const strToArr = (str: string | string[]) => Array.isArray(str) ? str : [str];
 
   const canProceed = () => {
     if (step === 1) {
@@ -165,9 +196,15 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
       return profile.city && profile.country;
     }
     if (step === 3) {
-      if (category === "books") return profile.activity && profile.bookGenre;
-      if (category === "music") return profile.activity && profile.musicType;
-      if (category === "movies") return profile.activity && profile.movieStyle;
+      // Traits and Alignments are optional but recommended.
+      // Let's enforce at least one trait for better recommendations.
+      return profile.personalityTraits.length > 0;
+    }
+    if (step === 4) {
+      // At least one activity and preference
+      if (category === "books") return profile.activity.length > 0 && profile.bookGenre.length > 0;
+      if (category === "music") return profile.activity.length > 0 && profile.musicType.length > 0;
+      if (category === "movies") return profile.activity.length > 0 && profile.movieStyle.length > 0;
     }
     return false;
   };
@@ -185,18 +222,12 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
       return (
         <div className="space-y-3">
           <Label className="text-foreground">Book Genre Preference</Label>
-          <Select value={profile.bookGenre} onValueChange={(v) => updateProfile("bookGenre", v)}>
-            <SelectTrigger className="bg-card border-border">
-              <SelectValue placeholder="Select your preferred genre" />
-            </SelectTrigger>
-            <SelectContent>
-              {bookGenres.map((genre) => (
-                <SelectItem key={genre.value} value={genre.value}>
-                  {genre.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectDropdown
+            options={bookGenres}
+            selected={profile.bookGenre}
+            onChange={(v) => updateProfile("bookGenre", v)}
+            placeholder="Select genres..."
+          />
         </div>
       );
     }
@@ -204,36 +235,24 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
       return (
         <div className="space-y-3">
           <Label className="text-foreground">Music Type Preference</Label>
-          <Select value={profile.musicType} onValueChange={(v) => updateProfile("musicType", v)}>
-            <SelectTrigger className="bg-card border-border">
-              <SelectValue placeholder="Select your preferred type" />
-            </SelectTrigger>
-            <SelectContent>
-              {musicTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectDropdown
+            options={musicTypes}
+            selected={profile.musicType}
+            onChange={(v) => updateProfile("musicType", v)}
+            placeholder="Select types..."
+          />
         </div>
       );
     }
     return (
       <div className="space-y-3">
         <Label className="text-foreground">Film Style Preference</Label>
-        <Select value={profile.movieStyle} onValueChange={(v) => updateProfile("movieStyle", v)}>
-          <SelectTrigger className="bg-card border-border">
-            <SelectValue placeholder="Select your preferred style" />
-          </SelectTrigger>
-          <SelectContent>
-            {movieStyles.map((style) => (
-              <SelectItem key={style.value} value={style.value}>
-                {style.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectDropdown
+          options={movieStyles}
+          selected={profile.movieStyle}
+          onChange={(v) => updateProfile("movieStyle", v)}
+          placeholder="Select styles..."
+        />
       </div>
     );
   };
@@ -340,38 +359,53 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
         {step === 3 && (
           <div className="space-y-6 animate-slide-up">
             <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold text-foreground mb-2">Personality & Alignment</h2>
+              <p className="text-muted-foreground">Deeper insights for better matches</p>
+            </div>
+            <div className="space-y-3">
+              <Label className="text-foreground">Personality Traits</Label>
+              <MultiSelectDropdown
+                options={personalityTraits}
+                selected={profile.personalityTraits}
+                onChange={(v) => updateProfile("personalityTraits", v)}
+                placeholder="Select traits..."
+              />
+            </div>
+            <div className="space-y-3">
+              <Label className="text-foreground">Alignments</Label>
+              <MultiSelectDropdown
+                options={alignments}
+                selected={profile.alignments}
+                onChange={(v) => updateProfile("alignments", v)}
+                placeholder="Select alignments..."
+              />
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-6 animate-slide-up">
+            <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold text-foreground mb-2">Your preferences</h2>
               <p className="text-muted-foreground">Help us find what resonates with you</p>
             </div>
             <div className="space-y-3">
               <Label className="text-foreground">Current Activity / Intent</Label>
-              <Select value={profile.activity} onValueChange={(v) => updateProfile("activity", v)}>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="What are you doing right now?" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activities.map((activity) => (
-                    <SelectItem key={activity.value} value={activity.value}>
-                      {activity.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectDropdown
+                options={activities}
+                selected={profile.activity}
+                onChange={(v) => updateProfile("activity", v)}
+                placeholder="Select activities..."
+              />
             </div>
             <div className="space-y-3">
               <Label className="text-foreground">Current Mood (Optional)</Label>
-              <Select value={profile.mood} onValueChange={(v) => updateProfile("mood", v)}>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="How are you feeling?" />
-                </SelectTrigger>
-                <SelectContent>
-                  {moods.map((mood) => (
-                    <SelectItem key={mood.value} value={mood.value}>
-                      {mood.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectDropdown
+                options={moods}
+                selected={profile.mood}
+                onChange={(v) => updateProfile("mood", v)}
+                placeholder="Select moods..."
+              />
             </div>
             {getCategoryPreference()}
           </div>
