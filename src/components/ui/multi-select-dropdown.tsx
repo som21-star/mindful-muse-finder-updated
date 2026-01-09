@@ -1,6 +1,11 @@
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 type Option = Record<"value" | "label", string>;
 
@@ -21,19 +26,7 @@ export function MultiSelectDropdown({
     label,
     className,
 }: MultiSelectDropdownProps) {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const dropdownRef = React.useRef<HTMLDivElement>(null);
-
-    // Close dropdown when clicking outside
-    React.useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    const [open, setOpen] = React.useState(false);
 
     const handleToggleOption = (value: string) => {
         if (selected.includes(value)) {
@@ -53,48 +46,46 @@ export function MultiSelectDropdown({
     };
 
     return (
-        <div ref={dropdownRef} className={cn("relative w-full", className)}>
+        <div className={cn("w-full", className)}>
             {label && (
                 <label className="block text-sm font-medium text-foreground mb-2">
                     {label}
                 </label>
             )}
 
-            {/* Dropdown trigger */}
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className={cn(
-                    "w-full flex items-center justify-between",
-                    "px-4 py-3 rounded-lg",
-                    "bg-card/50 border border-border/50",
-                    "text-foreground text-sm",
-                    "hover:border-primary/30 transition-colors",
-                    "focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                )}
-            >
-                <span className={selected.length === 0 ? "text-muted-foreground" : ""}>
-                    {getDisplayText()}
-                </span>
-                <ChevronDown
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <button
+                        type="button"
+                        className={cn(
+                            "w-full flex items-center justify-between",
+                            "px-4 py-3 rounded-lg",
+                            "bg-card/50 border border-border/50",
+                            "text-foreground text-sm",
+                            "hover:border-primary/30 transition-colors",
+                            "focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                        )}
+                    >
+                        <span className={selected.length === 0 ? "text-muted-foreground" : ""}>
+                            {getDisplayText()}
+                        </span>
+                        <ChevronDown
+                            className={cn(
+                                "h-4 w-4 text-muted-foreground transition-transform",
+                                open && "transform rotate-180"
+                            )}
+                        />
+                    </button>
+                </PopoverTrigger>
+                <PopoverContent
                     className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform",
-                        isOpen && "transform rotate-180"
+                        // Match width of trigger if possible, or use w-[var(--radix-popover-trigger-width)]
+                        "w-[var(--radix-popover-trigger-width)] p-2",
+                        "bg-card/95 backdrop-blur-md border border-border/50 rounded-lg shadow-xl"
                     )}
-                />
-            </button>
-
-            {/* Dropdown menu */}
-            {isOpen && (
-                <div
-                    className={cn(
-                        "absolute z-[9999] w-full mt-2",
-                        "bg-card/95 backdrop-blur-md border border-border/50 rounded-lg shadow-xl",
-                        "max-h-64 overflow-y-auto",
-                        "animate-in fade-in-0 zoom-in-95"
-                    )}
+                    align="start"
                 >
-                    <div className="p-2">
+                    <div className="max-h-64 overflow-y-auto">
                         {options.map((option) => {
                             const isSelected = selected.includes(option.value);
                             return (
@@ -104,7 +95,7 @@ export function MultiSelectDropdown({
                                     onClick={() => handleToggleOption(option.value)}
                                     className={cn(
                                         "w-full flex items-center px-3 py-2.5 rounded-md text-sm transition-all",
-                                        "hover:bg-primary/10",
+                                        "hover:bg-primary/10 text-left",
                                         isSelected
                                             ? "bg-gradient-teal-purple text-white font-medium"
                                             : "text-foreground"
@@ -115,8 +106,8 @@ export function MultiSelectDropdown({
                             );
                         })}
                     </div>
-                </div>
-            )}
+                </PopoverContent>
+            </Popover>
 
             {/* Selected count indicator */}
             {selected.length > 0 && (

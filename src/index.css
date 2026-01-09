@@ -11,80 +11,86 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* MindMuse Cosmic Palette */
-    --background: 240 33% 9%;
-    /* Deep Indigo #1a1a2e */
+    /* Deep Black/Blue Palette - inspired by reference images */
+    --background: 222 47% 4%;
+    /* True deep black #080c14 */
     --foreground: 210 40% 98%;
 
-    --card: 240 25% 13%;
+    --card: 220 40% 8%;
+    /* Slightly lighter for cards #0d1520 */
     --card-foreground: 210 40% 98%;
 
-    --popover: 240 33% 11%;
+    --popover: 222 47% 6%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 180 79% 27%;
-    /* Teal #0f7c7c */
-    --primary-foreground: 210 40% 98%;
+    --primary: 195 100% 50%;
+    /* Vibrant Cyan #00b4d8 */
+    --primary-foreground: 222 47% 4%;
 
-    --secondary: 240 25% 18%;
+    --secondary: 220 40% 12%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 25% 18%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 40% 15%;
+    --muted-foreground: 215 20% 55%;
 
-    --accent: 45 81% 46%;
-    /* Gold #d4a017 */
-    --accent-foreground: 240 33% 9%;
+    --accent: 45 90% 50%;
+    /* Gold accent for CTAs #f0a500 */
+    --accent-foreground: 222 47% 4%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 25% 20%;
-    --input: 240 25% 18%;
-    --ring: 180 79% 27%;
+    --border: 220 40% 15%;
+    --input: 220 40% 12%;
+    --ring: 195 100% 50%;
 
     --radius: 1rem;
 
-    --sidebar-background: 240 33% 9%;
+    --sidebar-background: 222 47% 4%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 180 79% 27%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 45 81% 46%;
-    --sidebar-accent-foreground: 240 33% 9%;
-    --sidebar-border: 240 25% 20%;
-    --sidebar-ring: 180 79% 27%;
+    --sidebar-primary: 195 100% 50%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 45 90% 50%;
+    --sidebar-accent-foreground: 222 47% 4%;
+    --sidebar-border: 220 40% 15%;
+    --sidebar-ring: 195 100% 50%;
 
-    --chart-1: 180 79% 27%;
-    --chart-2: 180 79% 40%;
-    --chart-3: 45 81% 46%;
-    --chart-4: 240 25% 30%;
-    --chart-5: 240 25% 20%;
+    --chart-1: 195 100% 50%;
+    --chart-2: 195 100% 60%;
+    --chart-3: 45 90% 50%;
+    --chart-4: 220 40% 25%;
+    --chart-5: 220 40% 15%;
 
-    --sidebar: 240 25% 13%;
+    --sidebar: 220 40% 8%;
 
     --font-sans: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     --font-serif: 'Source Serif Pro', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
     --font-mono: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.2);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.2);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.2);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.2);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.3), 0 10px 10px -5px hsl(0 0% 0% / 0.2);
-    --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.5);
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.3);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.3);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -1px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -2px hsl(0 0% 0% / 0.3);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.4), 0 10px 10px -5px hsl(0 0% 0% / 0.3);
+    --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.6);
 
     --tracking-normal: 0em;
     --spacing: 0.25rem;
 
-    /* Glassmorphism tokens - cosmic teal glow */
-    --glass-bg: hsl(240 25% 13% / 0.6);
-    --glass-border: hsl(180 79% 27% / 0.25);
-    --glass-glow: hsl(180 79% 27% / 0.15);
+    /* Glassmorphism tokens - cyan glow */
+    --glass-bg: hsl(220 40% 8% / 0.7);
+    --glass-border: hsl(195 100% 50% / 0.2);
+    --glass-glow: hsl(195 100% 50% / 0.1);
 
     /* Gold glow for special elements */
-    --gold-glow: hsl(45 81% 46% / 0.3);
+    --gold-glow: hsl(45 90% 50% / 0.3);
+
+    /* Cosmic gradient colors */
+    --gradient-coral: hsl(10 80% 60%);
+    --gradient-pink: hsl(320 70% 55%);
+    --gradient-cyan: hsl(195 100% 50%);
   }
 
   .dark {
@@ -168,13 +174,14 @@ All colors MUST be HSL.
     background: linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--secondary)) 50%, hsl(var(--primary) / 0.05) 100%);
   }
 
-  /* Cosmic teal-green gradient */
+  /* Cyan-blue gradient (primary) */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(180 79% 27%) 0%, hsl(160 70% 40%) 50%, hsl(180 79% 35%) 100%);
+    background: linear-gradient(135deg, hsl(195 100% 45%) 0%, hsl(210 100% 50%) 50%, hsl(195 100% 55%) 100%);
   }
 
+  /* Secondary gradient for selected items */
   .gradient-teal-purple {
-    background: linear-gradient(135deg, hsl(180 79% 27%) 0%, hsl(160 70% 40%) 100%);
+    background: linear-gradient(135deg, hsl(195 100% 45%) 0%, hsl(210 100% 55%) 100%);
   }
 
   .gradient-card {
@@ -182,43 +189,31 @@ All colors MUST be HSL.
   }
 
   .gradient-dark {
-    background: linear-gradient(135deg, hsl(240 33% 9%) 0%, hsl(240 25% 13%) 50%, hsl(240 33% 9%) 100%);
+    background: linear-gradient(135deg, hsl(222 47% 4%) 0%, hsl(220 40% 10%) 50%, hsl(222 47% 4%) 100%);
   }
 
-  /* Cosmic text gradient with teal-green */
+  /* Cosmic glow gradient (coral -> pink -> cyan) like reference image 2 */
+  .gradient-cosmic-glow {
+    background: linear-gradient(180deg, hsl(10 80% 60%) 0%, hsl(320 70% 55%) 40%, hsl(195 100% 50%) 100%);
+  }
+
+  /* Text gradient with cyan */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(180 79% 40%) 0%, hsl(160 70% 45%) 50%, hsl(180 79% 45%) 100%);
+    background-image: linear-gradient(135deg, hsl(195 100% 50%) 0%, hsl(195 100% 70%) 100%);
   }
 
   .text-gradient-cosmic {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(180 79% 35%) 0%, hsl(160 70% 40%) 70%, hsl(45 81% 46%) 100%);
+    background-image: linear-gradient(135deg, hsl(195 100% 50%) 0%, hsl(210 100% 60%) 70%, hsl(45 90% 50%) 100%);
   }
 
   .glow-primary {
-    box-shadow: 0 0 40px hsl(180 79% 27% / 0.3), 0 0 80px hsl(160 70% 40% / 0.2);
+    box-shadow: 0 0 40px hsl(195 100% 50% / 0.3), 0 0 80px hsl(195 100% 50% / 0.15);
   }
 
-  .glow-purple {
-    box-shadow: 0 0 30px hsl(160 70% 40% / 0.4), 0 0 60px hsl(160 70% 40% / 0.2);
-  }
-
-  .gradient-card {
-    background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
-  }
-
-  .gradient-dark {
-    background: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(217 33% 17%) 50%, hsl(222 47% 11%) 100%);
-  }
-
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(199 89% 48%) 0%, hsl(199 89% 70%) 100%);
-  }
-
-  .glow-primary {
-    box-shadow: 0 0 40px hsl(var(--primary) / 0.3), 0 0 80px hsl(var(--primary) / 0.1);
+  .glow-cyan {
+    box-shadow: 0 0 30px hsl(195 100% 50% / 0.4), 0 0 60px hsl(195 100% 50% / 0.2);
   }
 
   .glass {
@@ -228,17 +223,18 @@ All colors MUST be HSL.
   }
 
   .glass-card {
-    background: hsl(217 33% 17% / 0.5);
+    background: hsl(220 40% 10% / 0.6);
     backdrop-filter: blur(20px);
-    border: 1px solid hsl(199 89% 48% / 0.15);
-    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(199 89% 48% / 0.1);
+    border: 1px solid hsl(195 100% 50% / 0.15);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.4), inset 0 1px 0 hsl(195 100% 50% / 0.1);
   }
 
   .glass-input {
-    background: hsl(217 33% 17% / 0.4);
+    background: hsl(220 40% 12% / 0.5);
     backdrop-filter: blur(10px);
-    border: 1px solid hsl(199 89% 48% / 0.2);
+    border: 1px solid hsl(195 100% 50% / 0.2);
   }
+
 
   .animate-float {
     animation: float 6s ease-in-out infinite;

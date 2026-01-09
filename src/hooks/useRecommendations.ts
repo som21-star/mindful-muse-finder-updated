@@ -62,6 +62,7 @@ export function useRecommendations() {
           score: rec.score || 80,
           platforms: rec.platforms || [],
           isRegional: rec.isRegional || false,
+          thumbnail: rec.thumbnail || undefined, // Map thumbnail from API response
         }));
         setAllRecommendations(mappedRecommendations);
         paginateResults(mappedRecommendations, 1);
@@ -117,6 +118,7 @@ export function useRecommendations() {
           score: rec.score || 80,
           platforms: rec.platforms || [],
           isRegional: rec.isRegional || false,
+          thumbnail: rec.thumbnail || undefined,
         }));
         setAllRecommendations(mappedRecommendations);
         paginateResults(mappedRecommendations, 1);

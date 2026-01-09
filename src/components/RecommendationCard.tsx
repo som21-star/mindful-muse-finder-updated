@@ -19,6 +19,7 @@ export interface Recommendation {
   score: number;
   platforms?: Platform[];
   isRegional?: boolean;
+  thumbnail?: string; // Optional thumbnail image URL
 }
 
 interface RecommendationCardProps {
@@ -44,7 +45,7 @@ export function RecommendationCard({
   const handlePlatformClick = (platform: Platform, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!platform.url || platform.url.trim() === '') {
       toast({
         title: "Link unavailable",
@@ -53,7 +54,7 @@ export function RecommendationCard({
       });
       return;
     }
-    
+
     const isYouTube = platform.name.toLowerCase().includes('youtube') || /youtu\.be/.test(platform.url);
     let finalUrl = platform.url;
 
@@ -91,7 +92,7 @@ export function RecommendationCard({
       // if URL parsing fails, fall back to original string
       finalUrl = platform.url;
     }
-    
+
     const newWindow = window.open(finalUrl, '_blank');
 
     if (newWindow) {
@@ -110,136 +111,157 @@ export function RecommendationCard({
       document.body.removeChild(link);
     }
   };
-  
+
   return (
     <div
       className={cn(
         "group relative w-full rounded-xl border bg-card/80 backdrop-blur-sm p-5 transition-all duration-300",
-        "hover:shadow-lg hover:shadow-primary/5",
-        recommendation.isRegional 
-          ? "border-primary/30 bg-gradient-to-br from-primary/5 to-transparent" 
+        "hover:shadow-lg hover:shadow-primary/10",
+        recommendation.isRegional
+          ? "border-primary/30 bg-gradient-to-br from-primary/5 to-transparent"
           : "border-border hover:border-primary/20"
       )}
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      {/* Regional/Worldwide Badge - keep in top-right corner (reserve space so it doesn't overlap title) */}
-      <div className="absolute top-3 right-3">
+      {/* Regional/Worldwide Badge */}
+      <div className="absolute top-3 right-3 z-10">
         {recommendation.isRegional ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary backdrop-blur-sm">
             <MapPin className="h-3 w-3" />
             Regional
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent/90 px-2 py-0.5 text-xs font-medium text-accent-foreground backdrop-blur-sm">
             <Globe className="h-3 w-3" />
             Worldwide
           </span>
         )}
       </div>
 
-      <div className="mb-4 pr-16 sm:pr-20">
-        <div className="flex items-start gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={cn(
+      {/* Action buttons */}
+      <div className="absolute top-3 right-24 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button
+          onClick={() => onLike(recommendation.id)}
+          className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          title="More like this"
+        >
+          <ThumbsUp className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onDislike(recommendation.id)}
+          className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          title="Not for me"
+        >
+          <ThumbsDown className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onReplace(recommendation.id)}
+          className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          title="Replace suggestion"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="flex gap-4">
+        {/* Thumbnail */}
+        <div className="flex-shrink-0">
+          <div className="w-20 h-28 sm:w-24 sm:h-32 rounded-lg overflow-hidden border border-border/30">
+            {recommendation.thumbnail ? (
+              <img
+                src={recommendation.thumbnail}
+                alt={recommendation.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full gradient-cosmic-glow flex items-center justify-center">
+                <ActionIcon className="h-8 w-8 text-white/70" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span
+              className={cn(
                 "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
-                recommendation.isRegional 
-                  ? "bg-primary text-primary-foreground" 
+                recommendation.isRegional
+                  ? "bg-primary text-primary-foreground"
                   : "bg-primary/10 text-primary"
-              )}>
-                {index + 1}
+              )}
+            >
+              {index + 1}
+            </span>
+            <h4 className="font-semibold text-foreground text-lg leading-snug break-words whitespace-normal pr-20">
+              {recommendation.title}
+            </h4>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            by {recommendation.creator} • {recommendation.origin}
+          </p>
+
+          <div className="flex flex-wrap gap-2 mb-3">
+            {recommendation.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+              >
+                {tag}
               </span>
-              <h4 className="font-semibold text-foreground text-lg leading-snug break-words whitespace-normal">{recommendation.title}</h4>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              by {recommendation.creator} • {recommendation.origin}
-            </p>
-          </div>
-        </div>
-
-        {/* Action buttons positioned slightly left of the badge so badge remains top-right */}
-        <div className="absolute top-3 right-14 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => onLike(recommendation.id)}
-            className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-            title="More like this"
-          >
-            <ThumbsUp className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onDislike(recommendation.id)}
-            className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-            title="Not for me"
-          >
-            <ThumbsDown className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onReplace(recommendation.id)}
-            className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-            title="Replace suggestion"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-4">
-        {recommendation.tags.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      <div className="flex items-start gap-2 rounded-lg bg-primary/5 p-3 border border-primary/10">
-        <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-        <p className="text-sm text-foreground leading-relaxed">
-          {recommendation.reason}
-        </p>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Match Score</span>
-        <div className="flex items-center gap-2">
-          <div className="h-1.5 w-20 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-500"
-              style={{ width: `${recommendation.score}%` }}
-            />
-          </div>
-          <span className="font-medium text-primary">{recommendation.score}%</span>
-        </div>
-      </div>
-
-      {/* Platform Links */}
-      {recommendation.platforms && recommendation.platforms.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-border/50">
-          <div className="flex items-center gap-2 mb-2">
-            <ActionIcon className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium text-foreground">{actionLabel} on:</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {recommendation.platforms.slice(0, 6).map((platform) => (
-                <Button
-                  key={platform.name}
-                  variant={platform.type === "primary" ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "h-7 text-xs gap-1.5",
-                    platform.type === "primary" && "gradient-primary hover:opacity-90"
-                  )}
-                  onClick={(e) => handlePlatformClick(platform, e)}
-                >
-                  {platform.name}
-                  <ExternalLink className="h-3 w-3" />
-                </Button>
             ))}
           </div>
+
+          <div className="flex items-start gap-2 rounded-lg bg-primary/5 p-3 border border-primary/10">
+            <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-foreground leading-relaxed">
+              {recommendation.reason}
+            </p>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+            <span>Match Score</span>
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-20 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-500"
+                  style={{ width: `${recommendation.score}%` }}
+                />
+              </div>
+              <span className="font-medium text-primary">{recommendation.score}%</span>
+            </div>
+          </div>
+
+          {/* Platform Links */}
+          {recommendation.platforms && recommendation.platforms.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-border/50">
+              <div className="flex items-center gap-2 mb-2">
+                <ActionIcon className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-foreground">{actionLabel} on:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recommendation.platforms.slice(0, 6).map((platform) => (
+                  <Button
+                    key={platform.name}
+                    variant={platform.type === "primary" ? "default" : "outline"}
+                    size="sm"
+                    className={cn(
+                      "h-7 text-xs gap-1.5",
+                      platform.type === "primary" && "gradient-primary hover:opacity-90"
+                    )}
+                    onClick={(e) => handlePlatformClick(platform, e)}
+                  >
+                    {platform.name}
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
+
