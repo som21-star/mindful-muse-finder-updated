@@ -9,6 +9,8 @@ interface RecommendationPanelProps {
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
   onReplace: (id: string) => void;
+  context?: string[];
+  templateId?: string;
 }
 
 const categoryConfig = {
@@ -36,6 +38,8 @@ export function RecommendationPanel({
   onLike,
   onDislike,
   onReplace,
+  context,
+  templateId,
 }: RecommendationPanelProps) {
   const config = categoryConfig[category];
   const Icon = config.icon;
@@ -74,6 +78,8 @@ export function RecommendationPanel({
                 onLike={onLike}
                 onDislike={onDislike}
                 onReplace={onReplace}
+                context={context}
+                templateId={templateId}
               />
             ))}
           </div>

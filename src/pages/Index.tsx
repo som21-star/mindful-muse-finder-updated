@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Book, Film, Music, Sparkles, ArrowRight, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { Header } from "@/components/Header";
 import { CategoryCard } from "@/components/CategoryCard";
 import { ProfileWizard, UserProfile } from "@/components/ProfileWizard";
 import { RecommendationPanel } from "@/components/RecommendationPanel";
+import { DailySuggestions } from "@/components/DailySuggestions";
 import { ContentSearch } from "@/components/ContentSearch";
 import { Pagination } from "@/components/Pagination";
 import { useRecommendations } from "@/hooks/useRecommendations";
@@ -20,10 +22,12 @@ type Category = "books" | "movies" | "music";
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading, signOut } = useAuth();
 
   const [appState, setAppState] = useState<AppState>("welcome");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | undefined>(undefined);
 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
@@ -82,7 +86,42 @@ const Index = () => {
     };
 
     loadProfile();
+    loadProfile();
   }, [user]);
+
+  // Handle applied template from Templates page
+  useEffect(() => {
+    if (location.state?.template && userProfile) {
+      const template = location.state.template;
+      console.log("Applying template:", template);
+
+      const updatedProfile = {
+        ...userProfile,
+        activity: [template.activityId],
+        // You might want to update other fields based on the template if needed
+      };
+
+      setUserProfile(updatedProfile);
+      setCurrentTemplateId(template.id);
+      setAppState("recommendations");
+
+      // Clear the state so it doesn't re-apply on refresh/navigation
+      window.history.replaceState({}, document.title);
+
+      if (selectedCategory) {
+        generateRecommendations(updatedProfile, selectedCategory);
+      } else {
+        // Default to first category available in template or a default one
+        // For now, let's keep it consistent with the existing flow or maybe prompt user?
+        // Let's default to "music" as it's common for these templates, or maybe "books"
+        // Actually, the template has recommendations with types.
+        // If we want to show recommendations, we need a selectedCategory.
+        // Let's see if the template has a dominant type or just pick "music" for now.
+        setSelectedCategory("music");
+        generateRecommendations(updatedProfile, "music");
+      }
+    }
+  }, [location.state, userProfile]);
 
   const handleCategorySelect = (category: Category) => {
     setSelectedCategory(category);
@@ -161,35 +200,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background transition-all duration-500">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-              <Sun className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-serif font-semibold text-lg text-foreground">Conscious</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/profile")}
-            >
-              Profile
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                await signOut();
-                navigate("/auth");
-              }}
-            >
-              Sign out
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
+
 
       {/* Main Content */}
       <main className="container px-4 py-8">
@@ -323,6 +335,9 @@ const Index = () => {
               </div>
             </div>
 
+            {/* Daily Optimisation Suggestions */}
+            <DailySuggestions />
+
             {/* Search Bar for all categories */}
             <div className="mb-6">
               <ContentSearch
@@ -340,6 +355,8 @@ const Index = () => {
                 onLike={handleLike}
                 onDislike={handleDislike}
                 onReplace={handleReplace}
+                context={userProfile?.activity ? [userProfile.activity] : []}
+                templateId={currentTemplateId}
               />
             </div>
 

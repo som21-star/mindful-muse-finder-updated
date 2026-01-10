@@ -1,7 +1,9 @@
-import { ThumbsUp, ThumbsDown, RefreshCw, Sparkles, ExternalLink, Book, Film, Music, MapPin, Globe } from "lucide-react";
+import { ThumbsUp, ThumbsDown, RefreshCw, Sparkles, ExternalLink, Book, Film, Music, MapPin, Globe, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { useConsumptionLog } from "@/hooks/useConsumptionLog";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export interface Platform {
   name: string;
@@ -29,6 +31,8 @@ interface RecommendationCardProps {
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
   onReplace: (id: string) => void;
+  context?: string[];
+  templateId?: string;
 }
 
 export function RecommendationCard({
@@ -38,9 +42,14 @@ export function RecommendationCard({
   onLike,
   onDislike,
   onReplace,
+  context,
+  templateId,
 }: RecommendationCardProps) {
   const actionLabel = category === "books" ? "Read" : category === "movies" ? "Watch" : "Listen";
   const ActionIcon = category === "books" ? Book : category === "movies" ? Film : Music;
+  const { logInteraction } = useConsumptionLog();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const isFav = isFavorite(recommendation.id);
 
   const handlePlatformClick = (platform: Platform, e: React.MouseEvent) => {
     e.preventDefault();
@@ -90,8 +99,16 @@ export function RecommendationCard({
       }
     } catch (err) {
       // if URL parsing fails, fall back to original string
-      finalUrl = platform.url;
     }
+
+    // Log the interaction
+    logInteraction({
+      itemId: recommendation.id,
+      itemType: category === "books" ? "book" : category === "movies" ? "movie" : "music",
+      itemTitle: recommendation.title,
+      templateId,
+      context,
+    });
 
     const newWindow = window.open(finalUrl, '_blank');
 
@@ -140,6 +157,18 @@ export function RecommendationCard({
 
       {/* Action buttons */}
       <div className="absolute top-3 right-24 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button
+          onClick={() => toggleFavorite(recommendation.id, category === "books" ? "book" : category === "movies" ? "movie" : "music", recommendation.title)}
+          className={cn(
+            "rounded-full p-2 transition-colors",
+            isFav
+              ? "text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+          title={isFav ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Star className={cn("h-4 w-4", isFav && "fill-current")} />
+        </button>
         <button
           onClick={() => onLike(recommendation.id)}
           className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"

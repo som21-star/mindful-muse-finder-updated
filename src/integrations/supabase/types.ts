@@ -22,7 +22,7 @@ export type Database = {
           city: string | null
           region: string | null
           country: string | null
-          activity: string[] | null // Assuming stored as array or handled as such
+          activity: string[] | null
           mood: string[] | null
           book_genre: string[] | null
           music_type: string[] | null
@@ -71,6 +71,85 @@ export type Database = {
             foreignKeyName: "user_profiles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      consumption_events: {
+        Row: {
+          id: string
+          user_id: string
+          item_id: string
+          item_type: string
+          item_title: string | null
+          template_id: string | null
+          context: string[] | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          item_id: string
+          item_type: string
+          item_title?: string | null
+          template_id?: string | null
+          context?: string[] | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          item_id?: string
+          item_type?: string
+          item_title?: string | null
+          template_id?: string | null
+          context?: string[] | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      favorites: {
+        Row: {
+          id: string
+          user_id: string
+          item_id: string
+          item_type: string
+          item_title: string | null
+          item_metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          item_id: string
+          item_type: string
+          item_title?: string | null
+          item_metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          item_id?: string
+          item_type?: string
+          item_title?: string | null
+          item_metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           }
