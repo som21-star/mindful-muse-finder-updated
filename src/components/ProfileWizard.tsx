@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/select";
 import { MultiSelectDropdown } from "@/components/ui/multi-select-dropdown";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/Auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 export interface UserProfile {
   age: string;
@@ -164,7 +168,9 @@ const countries = [
 ];
 
 export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardProps) {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile>({
     age: "",
     gender: "",
@@ -179,6 +185,57 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
     personalityTraits: [],
     alignments: [],
   });
+
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) {
+          console.log("No existing profile found or error fetching:", error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (data) {
+          // Map DB snake_case to component camelCase
+          setProfile(prev => ({
+            ...prev,
+            age: data.age || "",
+            gender: data.gender || "",
+            city: data.city || "",
+            region: data.region || "",
+            country: data.country || "",
+            personalityTraits: data.personality_traits || [],
+            alignments: data.alignments || [],
+            // Don't pre-fill activity/mood as these are session specific
+            // Don't pre-fill preferences unless we want to persist them across sessions too? 
+            // User request says "Only ask for current activity/mood per session"
+          }));
+
+          // valid profile needs at least age, gender, city, country
+          if (data.age && data.gender && data.city && data.country) {
+            setStep(4); // Skip to preferences
+          }
+        }
+      } catch (err) {
+        console.error("Error checking profile:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkExistingProfile();
+  }, [user]);
 
   const totalSteps = 4;
 
@@ -213,7 +270,34 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
+      // Save profile to DB before completing
+      saveProfile();
       onComplete(profile);
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!user) return;
+
+    const profileData = {
+      user_id: user.id,
+      age: profile.age,
+      gender: profile.gender,
+      city: profile.city,
+      region: profile.region,
+      country: profile.country,
+      personality_traits: profile.personalityTraits,
+      alignments: profile.alignments,
+      updated_at: new Date().toISOString(),
+      // We can optionally update activity/mood/preferences too, but maybe keeping them session-only is better for history
+    };
+
+    const { error } = await supabase
+      .from("user_profiles")
+      .upsert(profileData);
+
+    if (error) {
+      console.error("Error saving profile:", error);
     }
   };
 
@@ -256,6 +340,14 @@ export function ProfileWizard({ category, onComplete, onBack }: ProfileWizardPro
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-xl mx-auto flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-xl mx-auto animate-fade-in">

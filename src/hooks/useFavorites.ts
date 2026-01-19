@@ -80,8 +80,8 @@ export const useFavorites = () => {
                 user_id: user.id,
                 item_id: itemId,
                 item_type: itemType,
-                item_title: itemTitle,
-                item_metadata: itemMetadata,
+                item_title: itemTitle || null,
+                item_metadata: itemMetadata || null,
             };
 
             const { data, error } = await supabase
@@ -91,8 +91,8 @@ export const useFavorites = () => {
                 .single();
 
             if (error) {
-                toast.error("Failed to add favorite");
                 console.error("Error adding favorite:", error);
+                toast.error(`Failed to add favorite: ${error.message}`);
             } else if (data) {
                 setFavorites((prev) => [data, ...prev]);
                 toast.success("Added to favorites");

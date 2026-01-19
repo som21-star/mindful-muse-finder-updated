@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -124,12 +125,60 @@ serve(async (req) => {
 
   try {
     const { userProfile, category, searchQuery, count = 10 } = await req.json();
-    
+
     console.log("Generating recommendations for:", { userProfile, category, searchQuery, count });
-    
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    // Initialize Supabase Client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch Community Signals (Collaborative Filtering)
+    let communityFavoritesSection = "";
+    try {
+      // 1. Find similar users (same country + matching personality/interests)
+      // Simplified: just same country for now to ensure some results
+      const { data: similarUsers } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('country', userProfile.country)
+        .neq('user_id', userProfile.id || 'unknown') // Exclude current user if possible
+        .limit(20);
+
+      if (similarUsers && similarUsers.length > 0) {
+        const similarUserIds = similarUsers.map(u => u.user_id);
+
+        // 2. Get favorites from these users for the current category
+        const { data: communityFavs } = await supabase
+          .from('favorites')
+          .select('item_title, item_metadata')
+          .eq('item_type', category === 'books' ? 'book' : category === 'movies' ? 'movie' : 'music')
+          .in('user_id', similarUserIds)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (communityFavs && communityFavs.length > 0) {
+          const rules = [...new Set(communityFavs.map(f => f.item_title).filter(Boolean))];
+          if (rules.length > 0) {
+            communityFavoritesSection = `
+COMMUNITY FAVORITES (Users in ${userProfile.country} like these):
+${rules.join(", ")}
+
+INSTRUCTION: You MAY interpret these community favorites as a signal of what is culturally relevant. 
+You can recommend 1-2 items from this list if they fit the user's conscious profile, 
+OR recommend items similar to them.
+`;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching community signals:", err);
+      // Continue without community signals
     }
 
     const isSearchMode = !!searchQuery;
@@ -147,6 +196,8 @@ ${trainingExamples}
 CRITICAL RULES:
 - Never recommend the same author/creator twice in one set
 ${isSearchMode ? '- When in SEARCH MODE, return ONLY results matching the search query - ignore regional/worldwide distribution rules' : '- For regular recommendations: 30% from user\'s region/country (isRegional: true), 70% from worldwide (isRegional: false)'}
+- Mix classic and contemporary works
+- ${isSearchMode ? '- When in SEARCH MODE, return ONLY results matching the search query - ignore regional/worldwide distribution rules' : '- For regular recommendations: 30% from user\'s region/country (isRegional: true), 70% from worldwide (isRegional: false)'}
 - Mix classic and contemporary works
 - Provide a unique, personalized AI explanation for each recommendation
 - Calculate a match score (70-98%) based on how well each item matches the user's profile
@@ -182,14 +233,14 @@ FOR MUSIC:
 - For India: Gaana: https://gaana.com/search/{encoded_title}
 - For India: JioSaavn: https://www.jiosaavn.com/search/{encoded_title}`;
 
-    const categoryPreference = category === 'books' 
-      ? userProfile.bookGenre 
-      : category === 'music' 
-        ? userProfile.musicType 
+    const categoryPreference = category === 'books'
+      ? userProfile.bookGenre
+      : category === 'music'
+        ? userProfile.musicType
         : userProfile.movieStyle;
 
     let userPrompt = '';
-    
+
     if (searchQuery) {
       // Search mode - return only relevant results matching the query
       userPrompt = `Search for ${category} matching: "${searchQuery}"
@@ -224,7 +275,7 @@ For movies, include YouTube/Hotstar/JioCinema for Indian content.`;
       // Regular recommendation mode with regional/worldwide distribution
       const regionalCount = Math.round(resultCount * 0.3);
       const worldwideCount = resultCount - regionalCount;
-      
+
       userPrompt = `Generate ${resultCount} ${category} recommendations for this user:
 
 User Profile:
@@ -240,7 +291,12 @@ CRITICAL DISTRIBUTION:
 - ${regionalCount} recommendations MUST be from ${userProfile.country} or the user's region (isRegional: true)
 - ${worldwideCount} recommendations MUST be from worldwide/other cultures (isRegional: false)
 - Mix classic and contemporary works
+- ${regionalCount} recommendations MUST be from ${userProfile.country} or the user's region (isRegional: true)
+- ${worldwideCount} recommendations MUST be from worldwide/other cultures (isRegional: false)
+- Mix classic and contemporary works
 - Ensure variety in creators - no duplicate authors/artists/directors
+
+${communityFavoritesSection}
 
 Return ONLY a JSON array with exactly ${resultCount} recommendations in this format (no markdown, no code blocks):
 [
@@ -267,7 +323,7 @@ For movies from India, include Hotstar/JioCinema. For others include YouTube/Net
     }
 
     console.log("Calling AI gateway...");
-    
+
     // Use a reasonable timeout and slightly lower token budget for faster, consistent responses
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout
@@ -296,7 +352,7 @@ For movies from India, include Hotstar/JioCinema. For others include YouTube/Net
     if (!response.ok) {
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
           status: 429,
@@ -314,7 +370,7 @@ For movies from India, include Hotstar/JioCinema. For others include YouTube/Net
 
     const data = await response.json();
     console.log("AI response received");
-    
+
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
       throw new Error("No content in AI response");
@@ -334,7 +390,7 @@ For movies from India, include Hotstar/JioCinema. For others include YouTube/Net
         cleanContent = cleanContent.slice(0, -3);
       }
       cleanContent = cleanContent.trim();
-      
+
       // Try to parse directly first
       try {
         recommendations = JSON.parse(cleanContent);
@@ -407,8 +463,8 @@ For movies from India, include Hotstar/JioCinema. For others include YouTube/Net
 
   } catch (error) {
     console.error("Error in generate-recommendations function:", error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Failed to generate recommendations" 
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : "Failed to generate recommendations"
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
